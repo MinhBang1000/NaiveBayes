@@ -1,8 +1,29 @@
 class MyNavieBayes:
     def __init__(self) -> None:
         pass
+    
+    def check_continue(self,col): # Đưa vào một thuộc tính, một cột
+        check = False # Là dạng liên tục, True là rời rạc
+        for i in range(0,len(col)):
+            check_1 = True
+            try:
+                test = int(col[i])
+                check_1 = False
+            except:
+                try:
+                    test = float(col[i])
+                    check_1 = False
+                except:
+                    check_1 = True
+            if (check_1 == True): # Nếu có tìm thấy một chuỗi thì đây là dạng rời rạc
+                check = check_1
+                break # Đi đến điều kiện số 2 để xem đây có phải rời rạc hay không
+            
+        if (len(col.unique())<=10 and check==False): # Chỉ khi nó không có cái nào là chữ và có ít hơn 10 giá trị khác nhau thì nó là kiểu rời rạc
+            check = True
+        return check
 
-    def fit(self, X_train, Y_train):
+    def fit(self, X_train, Y_train, Laplace):
         nhan = Y_train
         dic_total = {}
         dic_nhan = {}
@@ -13,25 +34,48 @@ class MyNavieBayes:
         for tt_index in range(0, len(X_train.columns)):# Duyệt qua từng thuộc tính
             thuoctinh = X_train.iloc[:, tt_index]      # Lấy một thuộc tính 
             giatrinhan = nhan.unique()
-            giatrithuoctinh = X_train.iloc[:, tt_index].unique() # Lấy các giá trị phân biệt của nhãn và thuộc tính
+            giatrithuoctinh = X_train.iloc[:, tt_index].unique() # Lấy các giá trị phân biệt của thuộc tính
             tmp = {}
+            tmp1 = {}
             dic_tt = {}
+            dic_tmp1 = {}
             for k in range(0, len(giatrithuoctinh)):    # Cộng dồn số lượng các giá trị của thuộc tính theo nhãn vào từ điển con
                 dic_tt[giatrithuoctinh[k]] = {}
+                dic_tmp1[giatrithuoctinh[k]] = {}
                 tmp = {}
+                tmp1 = {}
                 for h in range(0, len(giatrinhan)):
                     tmp[giatrinhan[h]] = 0
+                    tmp1[giatrinhan[h]] = 0
                 dic_tt[giatrithuoctinh[k]] = tmp
+                dic_tmp1[giatrithuoctinh[k]] = tmp1
 
             # Phải có dấu xuống dòng tại hai dòng for riêng biệt
             for i in range(0, len(giatrithuoctinh)):
                 for j in range(0, len(thuoctinh)):
                     if (thuoctinh[j] == giatrithuoctinh[i]):
                         dic_tt[thuoctinh[j]][nhan[j]] += 1
-
-            for i in range(0,len(giatrithuoctinh)):
-                for j in range(0,len(giatrinhan)):
-                    dic_tt[giatrithuoctinh[i]][giatrinhan[j]] = dic_tt[giatrithuoctinh[i]][giatrinhan[j]]/dic_nhan[giatrinhan[j]]
+                        dic_tmp1[thuoctinh[j]][nhan[j]] += 1
+            
+            for j in range(0,len(giatrinhan)): # Nếu biết có một thuộc tính trong một giá trị bằng 0 thì sẽ quay lại thuộc tính đầu tiên của giá trị nhãn đó để tính lại theo Laplace
+                check_zero = False # Để check giá trị thuộc tính bằng 0
+                check_back = False
+                i=0
+                while (i<len(giatrithuoctinh)):
+                    if (dic_tt[giatrithuoctinh[i]][giatrinhan[j]]!=0 and check_zero==False):
+                        dic_tt[giatrithuoctinh[i]][giatrinhan[j]] = dic_tt[giatrithuoctinh[i]][giatrinhan[j]]/dic_nhan[giatrinhan[j]]
+                    else:
+                        check_zero = True # Để làm Laplace cho tất cả các giá trị của thuộc tính đó
+                        if (check_back==False):
+                            i = 0 # Quay lại cái đầu nếu đang ở các giá trị sau của thuộc tính này
+                            check_back = True # Chỉ set i bằng 0 một lần
+                    if (check_zero==True): # Xử lý Laplace
+                        # print("Gia tri thuoc tinh = ",giatrithuoctinh[i])
+                        # print("Dem duoc = ",dic_tmp1[giatrithuoctinh[i]][giatrinhan[j]])
+                        # print("Bao nhieu nhan nay = ",1/(len(dic_tt)))
+                        # print("Laplace = ",Laplace)
+                        dic_tt[giatrithuoctinh[i]][giatrinhan[j]] = (dic_tmp1[giatrithuoctinh[i]][giatrinhan[j]] + (1/(len(dic_tt)))*Laplace)/(dic_nhan[giatrinhan[j]]+Laplace)
+                    i+=1
 
             dic_total[X_train.columns[tt_index]] = dic_tt
         
@@ -43,14 +87,17 @@ class MyNavieBayes:
         self.giatrinhan = Y_train.unique()
     
     def predict(self, X_test):
-        X = X_test.iloc[2,:] # Chỉ cần thay đổi chỗ này để cho nhiều dòng
-        max_xacsuat = -1
-        ten_nhan = ''
-        for i in range(0,len(self.giatrinhan)): # Kiểm tra là Yes hay No trên từng dòng
-            xacsuat = self.dic_label[self.giatrinhan[i]]
-            for j in range(0,len(X)):
-                xacsuat = xacsuat*self.dic_main[X_test.columns[j]][X.iloc[j]][self.giatrinhan[i]]
-            if (xacsuat>=max_xacsuat):
-                max_xacsuat = xacsuat
-                ten_nhan = self.giatrinhan[i]
-        print(ten_nhan)
+        ret_arr = []
+        for k in range(0,len(X_test)): # Duyệt qua từng dòng
+            X = X_test.iloc[k,:] # Chỉ cần thay đổi chỗ này để cho nhiều dòng
+            max_xacsuat = -1
+            ten_nhan = ''
+            for i in range(0,len(self.giatrinhan)): # Kiểm tra là Yes hay No trên từng dòng
+                xacsuat = self.dic_label[self.giatrinhan[i]]
+                for j in range(0,len(X)):
+                    xacsuat = xacsuat*self.dic_main[X_test.columns[j]][X.iloc[j]][self.giatrinhan[i]]
+                if (xacsuat>=max_xacsuat): # lựa chọn nhãn
+                    max_xacsuat = xacsuat
+                    ten_nhan = self.giatrinhan[i]
+            ret_arr.append(ten_nhan)
+        return ret_arr
