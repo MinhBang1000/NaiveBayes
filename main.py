@@ -173,17 +173,18 @@ def lientuc(X_lt,Y_lt):
 
 lientuc(X,Y_train.unique())
 #===================================================================
+#MAIN HERE
 from NaiveBayes import MyNavieBayes
 import pandas as pd
 import numpy as np
 from sklearn.metrics import accuracy_score
 # Tiền xử lý
 dt_pr = pd.read_csv("Training Data.csv",delimiter=",").iloc[:,1:13]
-X_train = dt_pr.iloc[0:84000,0:11] # Học 84000 mẫu, Test 6000 mẫu
-Y_train = dt_pr.Risk_Flag.iloc[0:84000]
+X_train = dt_pr.iloc[0:168000,0:11] # Học 84000 mẫu, Test 6000 mẫu
+Y_train = dt_pr.Risk_Flag.iloc[0:168000]
 dt_pr_te = dt_pr                        
-X_test = dt_pr_te.iloc[84000:90000,0:11]
-Y_test = dt_pr_te.Risk_Flag.iloc[84000:90000]
+X_test = dt_pr_te.iloc[168000:,0:11]
+Y_test = dt_pr_te.Risk_Flag.iloc[168000:]
 
 # Training và Test
 nv = MyNavieBayes()
@@ -208,3 +209,56 @@ X_train = dt.iloc[0:5001,0:4]
 Y_train = dt.Risk_Flag.iloc[0:5001]
 X_test = dt.iloc[5001:5004,0:4]
 Y_test = dt.Risk_Flag.iloc[5001:5004]
+
+#===================================================================
+from sklearn.naive_bayes import GaussianNB
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+# Tiền xử lý
+dt_pr = pd.read_csv("Training Data.csv",delimiter=",").iloc[:,1:13]
+X_train = dt_pr.iloc[0:168000,0:11] # Học 84000 mẫu, Test 6000 mẫu
+Y_train = dt_pr.Risk_Flag.iloc[0:168000]
+dt_pr_te = dt_pr                        
+X_test = dt_pr_te.iloc[168000:,0:11]
+Y_test = dt_pr_te.Risk_Flag.iloc[168000:]
+
+# Training và Test
+nv1 = GaussianNB()
+nv1.fit(X_train,Y_train)
+Y_pre1 = nv1.predict(X_test)
+print(accuracy_score(Y_test,Y_pre1)*100,"%")
+#====================================================================
+
+# CHIA RA 7000 dòng và lấy 3 cột Income, Age, Car_Ownership. Chạy 11 để đánh giá trung bình
+#====================================================================
+from sklearn.naive_bayes import GaussianNB
+from NaiveBayes import MyNavieBayes
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+dt = pd.read_csv("Training Data.csv",delimiter=",")
+dt1 = dt.iloc[0:7000,1:3]
+dt2 = dt.Car_Ownership.iloc[0:7000]
+dulieu_train_X = dt1
+dulieu_train_X["Car_Ownership"] = dt2
+dulieu_train_Y = dt.Risk_Flag.iloc[0:7000]
+X_train,X_test,Y_train,Y_test = train_test_split(dulieu_train_X,dulieu_train_Y,test_size=1/3)
+nv = MyNavieBayes()
+nv.fit(X_train=pd.DataFrame(X_train),Y_train=pd.DataFrame(Y_train),Laplace=1)
+Y_pre = nv.predict(X_test=pd.DataFrame(X_test))
+print(accuracy_score(Y_test,Y_pre)*100,"%")
+#====================================================================
+
+#np.unique(test.values.flatten())
+dt = pd.read_csv("play_tennis.csv")
+X = dt.iloc[:, 0:4]
+Y = dt.Play
+X_train,X_test,Y_train,Y_test = train_test_split(X,Y,test_size=1/3)
+X_train = X.iloc[0:5,:]
+Y_train = Y.iloc[0:5]
+X_test = X.iloc[5:,:]
+Y_test = Y.iloc[5:]
+Y_pre = nv.predict(X_test=pd.DataFrame(X_test))
+accuracy_score(Y_test,Y_pre)

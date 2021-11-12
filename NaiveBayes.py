@@ -1,5 +1,7 @@
 import math
 
+import numpy as np
+
 
 class MyNavieBayes:
     def __init__(self) -> None:
@@ -22,22 +24,22 @@ class MyNavieBayes:
                 check = check_1
                 break # Đi đến điều kiện số 2 để xem đây có phải rời rạc hay không
             
-        if (len(col.unique())<=10 and check==False): # Chỉ khi nó không có cái nào là chữ và có ít hơn 10 giá trị khác nhau thì nó là kiểu rời rạc
+        if (len(np.unique(col.flatten()))<=10 and check==False): # Chỉ khi nó không có cái nào là chữ và có ít hơn 10 giá trị khác nhau thì nó là kiểu rời rạc
             check = True
         return check
 
     def fit(self, X_train, Y_train, Laplace):
-        nhan = Y_train
+        nhan = Y_train.values.flatten()
         dic_total = {}
         dic_nhan = {}
-        for n_index in range(0,len(Y_train.unique())): # Khởi tạo từ điển nhãn
-            dic_nhan[Y_train.unique()[n_index]] = 0
+        for n_index in range(0,len(np.unique(Y_train.values.flatten()))): # Khởi tạo từ điển nhãn
+            dic_nhan[np.unique(Y_train.values.flatten())[n_index]] = 0
         for m_index in range(0,len(Y_train)):          # Cộng dồn số lượng từng nhãn vào từ điển 
-            dic_nhan[Y_train[m_index]]+=1
+            dic_nhan[Y_train.values.flatten()[m_index]]+=1
         for tt_index in range(0, len(X_train.columns)):# Duyệt qua từng thuộc tính
-            thuoctinh = X_train.iloc[:, tt_index]      # Lấy một thuộc tính 
-            giatrinhan = nhan.unique()
-            giatrithuoctinh = X_train.iloc[:, tt_index].unique() # Lấy các giá trị phân biệt của thuộc tính
+            thuoctinh = X_train.iloc[:, tt_index].values.flatten()      # Lấy một thuộc tính 
+            giatrinhan = np.unique(Y_train.values.flatten())
+            giatrithuoctinh = np.unique(X_train.iloc[:, tt_index].values.flatten()) # Lấy các giá trị phân biệt của thuộc tính
             tmp = {}
             tmp1 = {}
             dic_tt = {}
@@ -88,14 +90,14 @@ class MyNavieBayes:
                     tong_theo_nhan = 0
                     so_luong = 0
                     for lt_tt in range(0,len(X_lt)):
-                        if (giatrinhan[kiemtra_lt]==Y_train.iloc[lt_tt]): # Đếm số lượng để tính
-                            tong_theo_nhan = tong_theo_nhan + X_lt.iloc[lt_tt]
+                        if (giatrinhan[kiemtra_lt]==Y_train.values.flatten()[lt_tt]): # Đếm số lượng để tính
+                            tong_theo_nhan = tong_theo_nhan + X_lt[lt_tt]
                             so_luong = so_luong + 1
                     u = tong_theo_nhan/so_luong
                     o2 = 0
                     for lt in range(0,len(X_lt)):
-                        if (giatrinhan[kiemtra_lt]==Y_train.iloc[lt]):
-                            o2 = o2+(X_lt.iloc[lt]-u)*(X_lt.iloc[lt]-u)
+                        if (giatrinhan[kiemtra_lt]==Y_train.values.flatten()[lt]):
+                            o2 = o2+(X_lt[lt]-u)*(X_lt[lt]-u)
                     o2 = o2*(1/(so_luong-1))
                     o = math.sqrt(o2)
                     tmp[giatrinhan[kiemtra_lt]] = {
@@ -113,7 +115,7 @@ class MyNavieBayes:
             dic_nhan[giatrinhan[i]] = dic_nhan[giatrinhan[i]]/Y_train.count() 
         self.dic_label = dic_nhan
         self.total_label = Y_train.count()
-        self.giatrinhan = Y_train.unique()
+        self.giatrinhan = np.unique(Y_train.values.flatten())
     
     def predict(self, X_test):
         import math
@@ -138,7 +140,7 @@ class MyNavieBayes:
                         xacsuat = xacsuat*f
                     else:
                         xacsuat = xacsuat*self.dic_main[X_test.columns[j]][X.iloc[j]][self.giatrinhan[i]]
-                if (xacsuat>=max_xacsuat): # lựa chọn nhãn
+                if (xacsuat>=max_xacsuat).all(): # lựa chọn nhãn
                     max_xacsuat = xacsuat
                     ten_nhan = self.giatrinhan[i]
             ret_arr.append(ten_nhan)
