@@ -252,13 +252,72 @@ print(accuracy_score(Y_test,Y_pre)*100,"%")
 #====================================================================
 
 #np.unique(test.values.flatten())
-dt = pd.read_csv("play_tennis.csv")
-X = dt.iloc[:, 0:4]
-Y = dt.Play
-X_train,X_test,Y_train,Y_test = train_test_split(X,Y,test_size=1/3)
-X_train = X.iloc[0:5,:]
-Y_train = Y.iloc[0:5]
-X_test = X.iloc[5:,:]
-Y_test = Y.iloc[5:]
-Y_pre = nv.predict(X_test=pd.DataFrame(X_test))
-accuracy_score(Y_test,Y_pre)
+dt_1 = pd.read_csv("play_tennis.csv")
+X_1 = dt_1.iloc[:, 0:4]
+Y_1 = dt_1.Play
+nv1 = MyNavieBayes()
+X_train_1,X_test_1,Y_train_1,Y_test_1 = train_test_split(X_1,Y_1,test_size=1/3)
+nv1.fit(X_train=X_train_1,Y_train=Y_train_1,Laplace=1)
+Y_pre_1 = nv1.predict(X_test=pd.DataFrame(X_test_1))
+accuracy_score(Y_test_1,Y_pre_1)
+
+#
+#====================================================================
+from sklearn.naive_bayes import GaussianNB
+from sklearn.preprocessing import LabelEncoder
+from sklearn.tree import DecisionTreeClassifier
+from NaiveBayes import MyNavieBayes
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+dt = pd.read_csv("Training Data.csv",delimiter=",")
+dt1 = dt.iloc[:,1:3]
+dt2 = dt.Car_Ownership
+X = dt1
+X["Car_Ownership"] = dt2
+Y = dt.Risk_Flag
+# Chạy thử toàn tập dữ liệu
+#====================================================================
+X_train,X_test,Y_train,Y_test = train_test_split(X,Y,test_size=1/3,random_state=100)
+nv = MyNavieBayes()
+decision_tree = DecisionTreeClassifier(criterion="entropy")
+nv.fit(X_train=pd.DataFrame(X_train),Y_train=pd.DataFrame(Y_train),Laplace=1)
+X_train_decision = X_train.copy()
+X_test_decision = X_test.copy()
+en = LabelEncoder()
+X_train_decision.Car_Ownership = en.fit_transform(X_train_decision.Car_Ownership)
+X_test_decision.Car_Ownership = en.fit_transform(X_test_decision.Car_Ownership)
+decision_tree.fit(X_train_decision,Y_train)
+Y_preNV = nv.predict(X_test=pd.DataFrame(X_test))
+Y_preTree = decision_tree.predict(X_test_decision)
+print("Độ chính xác của Navie Bayes trên toàn tập: ",accuracy_score(Y_test,Y_preNV))
+print("Độ chính xác của DecisionTreeClassifier trên toàn tập: ",accuracy_score(Y_test,Y_preTree))
+
+# Chạy 7000 dòng với 11 lần lặp
+#====================================================================
+X_1 = X.iloc[0:7000,:]
+Y_1 = Y.iloc[0:7000]
+total_nv = 0
+total_tree = 0
+for lan in range(0,11):
+    X_train_2,X_test_2,Y_train_2,Y_test_2 = train_test_split(X_1,Y_1,test_size=1/3,random_state=lan)
+    X_train_decision_2 = X_train_2.copy()
+    X_test_decision_2 = X_test_2.copy()
+    en = LabelEncoder()
+    X_train_decision_2.Car_Ownership = en.fit_transform(X_train_decision_2.Car_Ownership)
+    X_test_decision_2.Car_Ownership = en.fit_transform(X_test_decision_2.Car_Ownership)
+    nv2 = MyNavieBayes()
+    decision_tree_2 = DecisionTreeClassifier(criterion="entropy")
+    nv2.fit(X_train=pd.DataFrame(X_train_2),Y_train=pd.DataFrame(Y_train_2),Laplace=1)
+    decision_tree_2.fit(X_train_decision_2,Y_train_2)
+    Y_preNV_2 = nv2.predict(X_test=pd.DataFrame(X_test_2))
+    Y_preTree_2 = decision_tree_2.predict(X_test_decision_2)
+    print("Lần lặp ",lan+1)
+    print("Độ chính xác của Navie Bayes: ",accuracy_score(Y_test_2,Y_preNV_2))
+    print("Độ chính xác của DecisionTreeClassifier: ",accuracy_score(Y_test_2,Y_preTree_2))
+    total_nv += accuracy_score(Y_test_2,Y_preNV_2)
+    total_tree += accuracy_score(Y_test_2,Y_preTree_2)
+print("Dộ chính xác trung bình Naive Bayes: ",total_nv/11)
+print("Độ chính xác trung bình Decision Tree Classifier: ",total_tree/11)
+#====================================================================
