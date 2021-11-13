@@ -321,3 +321,21 @@ for lan in range(0,11):
 print("Dộ chính xác trung bình Naive Bayes: ",total_nv/11)
 print("Độ chính xác trung bình Decision Tree Classifier: ",total_tree/11)
 #====================================================================
+# Slide Báo Cáo
+from sklearn.naive_bayes import GaussianNB
+from sklearn.preprocessing import LabelEncoder
+from sklearn.tree import DecisionTreeClassifier
+from NaiveBayes import MyNavieBayes
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+dt = pd.read_csv("train_data_slide.csv",delimiter=",")
+X = dt.iloc[:,0:3]
+Y = dt.Risk_Flag
+nv = MyNavieBayes()
+nv.fit(X_train=pd.DataFrame(X),Y_train=pd.DataFrame(Y),Laplace=1)
+dt_test = pd.read_csv("test_data_slide.csv",delimiter=",")
+X_test = dt_test.iloc[:,0:3]
+Y_test = dt_test.Risk_Flag
+Y_preSlide = nv.predict(X_test=pd.DataFrame(X_test))

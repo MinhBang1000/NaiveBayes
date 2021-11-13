@@ -24,7 +24,7 @@ class MyNavieBayes:
                 check = check_1
                 break # Đi đến điều kiện số 2 để xem đây có phải rời rạc hay không
             
-        if (len(np.unique(col.flatten()))<=10 and check==False): # Chỉ khi nó không có cái nào là chữ và có ít hơn 10 giá trị khác nhau thì nó là kiểu rời rạc
+        if (len(np.unique(col.flatten()))<=1 and check==False): # Chỉ khi nó không có cái nào là chữ và có ít hơn 10 giá trị khác nhau thì nó là kiểu rời rạc
             check = True
         return check
 
@@ -38,7 +38,7 @@ class MyNavieBayes:
             dic_nhan[Y_train.values.flatten()[m_index]]+=1
         for tt_index in range(0, len(X_train.columns)):# Duyệt qua từng thuộc tính
             thuoctinh = X_train.iloc[:, tt_index].values.flatten()      # Lấy một thuộc tính 
-            giatrinhan = np.unique(Y_train.values.flatten())
+            giatrinhan = np.unique(Y_train.values.flatten()) # Lấy các giá trị nhãn phân biệt
             giatrithuoctinh = np.unique(X_train.iloc[:, tt_index].values.flatten()) # Lấy các giá trị phân biệt của thuộc tính
             tmp = {}
             tmp1 = {}
